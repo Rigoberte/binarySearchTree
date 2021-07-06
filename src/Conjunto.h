@@ -46,13 +46,14 @@ class Conjunto
 
         const T& buscarMinimo(const T& nodo);
 
+
     private:
 
         /**
          * Completar con lo que sea necesario...
          **/
 
-        vector<T> valor_de_nodos;
+        T cardinal_;
 
         struct Nodo
         {
@@ -64,11 +65,13 @@ class Conjunto
             Nodo* izq;
             // Puntero a la raíz del subárbol derecho.
             Nodo* der;
+            Nodo* anterior;
         };
 
         // Puntero a la raíz de nuestro árbol.
         Nodo* _raiz;
 };
+
 
 template<class T>
 std::ostream& operator<<(std::ostream& os, const Conjunto<T>& c) {
