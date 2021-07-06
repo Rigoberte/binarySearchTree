@@ -1,93 +1,71 @@
 template <class T>
-Conjunto<T>::Nodo::Nodo(const T& v): valor(v), izq(nullptr), der(nullptr)  {
+Conjunto<T>::Nodo::Nodo(const T& v): valor(v), izq(nullptr), der(nullptr), anterior(nullptr)  {
 }
 
 template <class T>
-Conjunto<T>::Conjunto(): _raiz(nullptr), valor_de_nodos() {
+Conjunto<T>::Conjunto(): _raiz(nullptr), cardinal_(0) {
 }
+
 
 template <class T>
 Conjunto<T>::~Conjunto() {
-    delete _raiz;
+    while (cardinal() > 0){
+        remover(minimo());
+    }
 }
 
 template <class T>
 bool Conjunto<T>::pertenece(const T& clave) const {
-    for (int i = 0; i < valor_de_nodos.size(); i++) {
-        if (valor_de_nodos[i] == clave)
-        {
-            return true;
+    Nodo* nodo_i = _raiz;
+    bool res = false;
+    while (nodo_i != nullptr && not res){
+        if (nodo_i->valor > clave){
+            nodo_i = nodo_i->izq;
+        }
+        else{
+            if (nodo_i->valor < clave){
+                nodo_i = nodo_i->der;
+            }
+            else{
+                res = true;
+            }
         }
     }
-    return false;
+    return res;
 }
 
 template <class T>
 void Conjunto<T>::insertar(const T& clave) {
-    if (not this->pertenece(clave))
-    {
-        Nodo *nodo_i = _raiz;
+    if (not this->pertenece(clave)){
+        Nodo *nodo_iesimo = _raiz;
         Nodo *nodoNuevo = new Nodo(clave);
-        if (nodo_i == nullptr)
+        if (_raiz == nullptr)
         {
             _raiz = nodoNuevo;
-            valor_de_nodos.push_back(clave);
+            cardinal_++;
         }
         else
         {
-            while(not this->pertenece(clave))
+            while(not pertenece(clave))
             {
-                if (nodo_i->der == nullptr && nodo_i->izq == nullptr )
-                {
-                    if (clave > nodo_i->valor)
-                    {
-                        nodo_i->der = nodoNuevo;
+                if (clave > nodo_iesimo->valor){
+                    if (nodo_iesimo->der != nullptr){
+                        nodo_iesimo = nodo_iesimo->der;
                     }
-                    else
-                    {
-                        nodo_i->izq = nodoNuevo;
+                    else{
+                        nodo_iesimo->der = nodoNuevo;
+                        nodo_iesimo->der->anterior = nodo_iesimo;
+                        cardinal_++;
                     }
-                    valor_de_nodos.push_back(clave);
                 }
-                else
-                {
-                    if (nodo_i->der == nullptr)
-                    {
-                        if (clave > nodo_i->valor)
-                        {
-                            nodo_i->der = nodoNuevo;
-                            valor_de_nodos.push_back(clave);
-                        }
-                        else
-                        {
-                            nodo_i = nodo_i->izq;
-                        }
+                else{
+                    if (nodo_iesimo->izq != nullptr){
+                        nodo_iesimo = nodo_iesimo-> izq;
                     }
-                    else
-                    {
-                        if (nodo_i->izq == nullptr)
-                        {
-                            if (clave < nodo_i->valor)
-                            {
-                                nodo_i->izq = nodoNuevo;
-                                valor_de_nodos.push_back(clave);
-                            }
-                            else
-                            {
-                                nodo_i = nodo_i->der;
-                            }
-                        }
-                        else
-                        {
-                            if (clave > nodo_i->valor)
-                            {
-                                nodo_i = nodo_i->der;
-                            }
-                            else
-                            {
-                                nodo_i = nodo_i->izq;
-                            }
-                        }
+                    else{
+                        nodo_iesimo->izq = nodoNuevo;
+                        nodo_iesimo->izq->anterior = nodo_iesimo;
+                        cardinal_++;
                     }
                 }
             }
@@ -97,94 +75,125 @@ void Conjunto<T>::insertar(const T& clave) {
 
 template <class T>
 void Conjunto<T>::remover(const T& clave) {
-
     if (this->pertenece(clave))
     {
         Nodo *nodo_i = _raiz;
         while (nodo_i->valor != clave)
         {
-            if (clave > nodo_i->valor)
-            {
+            if (clave > nodo_i->valor){
                 nodo_i = nodo_i->der;
             }
-            else
-            {
+            else{
                 nodo_i = nodo_i->izq;
             }
         }
 
         if (nodo_i->izq == nullptr && nodo_i->der == nullptr) //Sin hijos
         {
-            delete nodo_i;
-//            remover(nodo_i->valor);
-        }
-        else
-        {
-            if (nodo_i->izq == nullptr) //Con 1 hijos
-            {
-                Nodo *nodoAnterior = nodo_i;
-                nodo_i = nodo_i->der;
-                delete nodoAnterior;
-//                remover(nodoAnterior->valor);
-            }
-            else
-            {
-                if (nodo_i->der == nullptr)
-                {
-                    Nodo *nodoAnterior = nodo_i;
-                    nodo_i = nodo_i->izq;
-                    delete nodoAnterior;
-//                    remover(nodoAnterior->valor);
+            if (nodo_i->anterior != nullptr){
+                if (nodo_i->anterior->der == nodo_i){
+                    nodo_i->anterior->der = nullptr;
                 }
-                else //Con 2 hijos
-                {
-                    Nodo *nodoMinimo = new Nodo(buscarMinimo(nodo_i->valor)); //falta buscar
-                    nodo_i = nodoMinimo;
-                    delete nodo_i->der;
-//                    remover(nodo_i->der->valor);
+                else{
+                    nodo_i->anterior->izq = nullptr;
                 }
             }
-        }
-
-        for (int i = 0; i < valor_de_nodos.size(); ++i)
-        {
-            if (clave == valor_de_nodos[i])
-            {
-                valor_de_nodos[i] = valor_de_nodos[valor_de_nodos.size()-1];
-                valor_de_nodos.pop_back();
+            else{
+                _raiz = nullptr;
             }
         }
-
+        else{
+            if (nodo_i->der != nullptr && nodo_i->izq != nullptr){
+                Nodo* minimoDerecha = nodo_i->der;
+                while (minimoDerecha->izq != nullptr){
+                    minimoDerecha = minimoDerecha->izq;
+                }
+                nodo_i->valor = minimoDerecha->valor;
+                if (minimoDerecha->der != nullptr){
+                    minimoDerecha->der->anterior = minimoDerecha->anterior;
+                    if (minimoDerecha->anterior == nodo_i){
+                        minimoDerecha->anterior->der = minimoDerecha->der;
+                    }
+                    else{
+                        minimoDerecha->anterior->izq = minimoDerecha->der;
+                    }
+                }
+                else{
+                    if (minimoDerecha->anterior == nodo_i){
+                        minimoDerecha->anterior->der = nullptr;
+                    }
+                    else{
+                        minimoDerecha->anterior->izq = nullptr;
+                    }
+                }
+                nodo_i = minimoDerecha;
+            }
+            else{
+                if (nodo_i->anterior != nullptr){
+                    if (nodo_i->der != nullptr){
+                        if (nodo_i->valor < nodo_i->anterior->valor){
+                            nodo_i->anterior->izq = nodo_i->der;
+                        }
+                        else{
+                            nodo_i->anterior->der = nodo_i->der;
+                        }
+                        nodo_i->der->anterior = nodo_i->anterior;
+                    }
+                    else{
+                        if(nodo_i->valor < nodo_i->anterior->valor){
+                            nodo_i->anterior->izq = nodo_i->izq;
+                        }
+                        else{
+                            nodo_i->anterior->der = nodo_i->izq;
+                        }
+                        nodo_i->izq->anterior = nodo_i->anterior;
+                    }
+                }
+                else{
+                    if (nodo_i->der != nullptr){
+                        nodo_i->der->anterior = nullptr;
+                        _raiz = nodo_i->der;
+                    }
+                    else{
+                        nodo_i->izq->anterior = nullptr;
+                        _raiz = nodo_i->izq;
+                    }
+                }
+            }
+        }
+        delete nodo_i;
+        cardinal_--;
     }
 }
 
 template <class T>
 const T& Conjunto<T>::siguiente(const T& clave) {
-    T diff = this->maximo(); T candidato;
-    for (int i = 0; i < valor_de_nodos.size(); ++i) {
-        if (valor_de_nodos[i] != clave && abs(valor_de_nodos[i]-clave) < diff)
-        {
-            diff = abs(valor_de_nodos[i]-clave);
-            candidato = valor_de_nodos[i];
+    Nodo* nodo_iesimo = _raiz;
+    while (nodo_iesimo->valor != clave){
+        if (clave > nodo_iesimo->valor){
+            nodo_iesimo = nodo_iesimo->der;
+        }
+        else{
+            nodo_iesimo = nodo_iesimo->izq;
         }
     }
-    Nodo *res = new Nodo(candidato);
-    return res->valor;
+    if (nodo_iesimo->der != nullptr){
+        nodo_iesimo = nodo_iesimo->der;
+        while (nodo_iesimo->izq != nullptr){
+            nodo_iesimo = nodo_iesimo->izq;
+        }
+    }
+    else{
+        nodo_iesimo = nodo_iesimo->anterior;
+    }
+    return nodo_iesimo->valor;
 }
 
 template <class T>
 const T& Conjunto<T>::minimo() const {
     Nodo *min = _raiz;
-    while (min->der != nullptr && min->izq != nullptr)
-    {
-        if (min->izq != nullptr)
-        {
-            min = min->izq;
-        }
-        else
-        {
-            min = min->der;
-        }
+    while (min->izq != nullptr){
+        min = min->izq;
     }
     return min->valor;
 }
@@ -192,23 +201,15 @@ const T& Conjunto<T>::minimo() const {
 template <class T>
 const T& Conjunto<T>::maximo() const {
     Nodo *max = _raiz;
-    while (max->der != nullptr && max->izq != nullptr)
-    {
-        if (max->der != nullptr)
-        {
-            max = max->der;
-        }
-        else
-        {
-            max = max->izq;
-        }
+    while (max->der != nullptr){
+        max = max->der;
     }
     return max->valor;
 }
 
 template <class T>
 unsigned int Conjunto<T>::cardinal() const {
-    return valor_de_nodos.size();
+    return cardinal_;
 }
 
 
@@ -249,4 +250,3 @@ template <class T>
 void Conjunto<T>::mostrar(std::ostream&) const {
     assert(false);
 }
-
